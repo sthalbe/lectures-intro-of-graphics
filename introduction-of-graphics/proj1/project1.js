@@ -5,8 +5,6 @@
 function composite( bgImg, fgImg, fgOpac, fgPos )
 {
     let fg_rect = {
-        // x : Math.min(Math.max(fgPos.x, 0), bgImg.width),
-        // y : Math.min(Math.max(fgPos.y, 0), bgImg.height),
         x : fgPos.x,
         y : fgPos.y,
         width : fgImg.width,
@@ -15,8 +13,9 @@ function composite( bgImg, fgImg, fgOpac, fgPos )
 
     for (let col = 0; col < bgImg.height; col++) {
         for (let row = 0; row < bgImg.width; row++) {
-            if(row >= fg_rect.x && col >= fg_rect.y)
-            { 
+
+            if(row >= fg_rect.x && row < fg_rect.width + fg_rect.x && col >= fg_rect.y && col < fg_rect.height + fg_rect.y )
+            {
                 let bg_idx = ((bgImg.width * col) + row) * 4;
                 let fg_idx = (fgImg.width * (col - fg_rect.y) + (row - fg_rect.x)) * 4
                 let bg_rgba = bgImg.data.slice(bg_idx, bg_idx + 4);
