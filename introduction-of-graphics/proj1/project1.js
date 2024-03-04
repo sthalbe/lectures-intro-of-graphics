@@ -4,28 +4,34 @@
 // fgPos is the position of the foreground image in pixels. It can be negative and (0,0) means the top-left pixels of the foreground and background are aligned.
 function composite( bgImg, fgImg, fgOpac, fgPos )
 {
-    let c = 0;
-    let rowIndex = 0;
-    let colIndex = 0;
-    for (colIndex = 0; colIndex < bgImg.height; colIndex++) {
-        for (rowIndex = 0; rowIndex < bgImg.width; rowIndex++) {
-            var startIndex = (colIndex * bgImg.width * 4) + rowIndex * 4;
-            var b_rgba = bgImg.data.slice(startIndex, startIndex + 4);
-            var f_rgba = fgImg.data.slice(startIndex, startIndex + 4);
-            
-            // console.log("b-rgba : (" + b_rgba[0] + ", " + b_rgba[1] + ", " + b_rgba[2] + ", " + b_rgba[3] + ")");
-            // console.log("f-rgba : (" + f_rgba[0] + ", " + f_rgba[1] + ", " + f_rgba[2] + ", " + f_rgba[3] + ")");
-            var baRatio = b_rgba[3]/255;
-            var faRatio = f_rgba[3]/255;
-            var alpha = f_rgba[3] + (1 - faRatio) * b_rgba[3];
-            var taRatio = alpha/255;
-            var r = (f_rgba[0] * faRatio) + ((1 - faRatio) * b_rgba[0] * baRatio)/taRatio;
-            var g = (f_rgba[1] * faRatio) + ((1 - faRatio) * b_rgba[1] * baRatio)/taRatio;
-            var b = (f_rgba[2] * faRatio) + ((1 - faRatio) * b_rgba[2] * baRatio)/taRatio;
-            bgImg.data[startIndex] = r;
-            bgImg.data[startIndex + 1] = g;
-            bgImg.data[startIndex + 2] = b;
-            bgImg.data[startIndex + 3] = alpha;
+    let fg_rect = {
+        // x : Math.min(Math.max(fgPos.x, 0), bgImg.width),
+        // y : Math.min(Math.max(fgPos.y, 0), bgImg.height),
+        x : fgPos.x,
+        y : fgPos.y,
+        width : fgImg.width,
+        height : fgImg.height
+    }
+
+    for (let col = 0; col < bgImg.height; col++) {
+        for (let row = 0; row < bgImg.width; row++) {
+            if(row >= fg_rect.x && col >= fg_rect.y)
+            { 
+                let bg_idx = ((bgImg.width * col) + row) * 4;
+                let fg_idx = (fgImg.width * (col - fg_rect.y) + (row - fg_rect.x)) * 4
+                let bg_rgba = bgImg.data.slice(bg_idx, bg_idx + 4);
+                let fg_rgba = fgImg.data.slice(fg_idx, fg_idx + 4);
+                fg_rgba[3] *= fgOpac;
+                let alpha = fg_rgba[3] + (1 - fg_rgba[3]/255) * bg_rgba[3];
+                let taRatio = alpha / 255;
+                let r = (fg_rgba[0] * fg_rgba[3]/255) + ((1 - fg_rgba[3]/255) * bg_rgba[0] * bg_rgba[3]/255) / taRatio;
+                let g = (fg_rgba[1] * fg_rgba[3]/255) + ((1 - fg_rgba[3]/255) * bg_rgba[1] * bg_rgba[3]/255) / taRatio;
+                let b = (fg_rgba[2] * fg_rgba[3]/255) + ((1 - fg_rgba[3]/255) * bg_rgba[2] * bg_rgba[3]/255) / taRatio;
+                bgImg.data[bg_idx] = r;
+                bgImg.data[bg_idx + 1] = g;
+                bgImg.data[bg_idx + 2] = b;
+                bgImg.data[bg_idx + 3] = alpha;
+            }
         }
     }
 }
@@ -56,10 +62,10 @@ function composite( bgImg, fgImg, fgOpac, fgPos )
 //             let blendedAlpha = fgAlpha + (bgAlpha * (1 - fgAlpha / 255));
 
 //             // Update the corresponding pixel in the background image data array with the blended values
-//             bgImg.data[bgIndex] = 255;
-//             bgImg.data[bgIndex + 1] = 1;
-//             bgImg.data[bgIndex + 2] = 1;
-//             bgImg.data[bgIndex + 3] = 255;
+//             bgImg.data[bgIndex] = blendedRed;
+//             bgImg.data[bgIndex + 1] = blendedGreen;
+//             bgImg.data[bgIndex + 2] = blendedBlue;
+//             bgImg.data[bgIndex + 3] = blendedAlpha;
 //         }
 //     }
 // }
